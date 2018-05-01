@@ -40,7 +40,7 @@ UserSchema.methods.toJSON = function () {
   return _.pick(userObject, ['_id', 'email'])
 };
 
-// add new method to object
+// add new method to object (instance)
 UserSchema.methods.generateAuthToken = function () {
   var user = this;
   var access = 'auth';
@@ -50,6 +50,29 @@ UserSchema.methods.generateAuthToken = function () {
 
   return user.save().then(() => {
     return token;
+  });
+};
+
+// Model methods
+UserSchema.statics.findByToken = function (token) {
+  var User = this;
+  var decoded;
+
+  try {
+    decoded = jwt.verify(token, 'abc123');
+  } catch (e) {
+    // return a reject promisse
+    // return new Promise((resolve, reject) => {
+    //   reject();
+    // });
+
+    return Promise.reject(); // is the same as the code above.
+  }
+
+  return User.findOne({
+    _id: decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth'
   });
 };
 
